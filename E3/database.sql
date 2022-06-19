@@ -12,6 +12,13 @@ DROP TABLE IF EXISTS planograma CASCADE;
 DROP TABLE IF EXISTS retalhista CASCADE;
 DROP TABLE IF EXISTS responsavel_por CASCADE;
 DROP TABLE IF EXISTS evento_reposicao CASCADE;
+DROP TABLE IF EXISTS account CASCADE;
+DROP TABLE IF EXISTS borrower CASCADE;
+DROP TABLE IF EXISTS loan CASCADE;
+DROP TABLE IF EXISTS depositor CASCADE;
+DROP TABLE IF EXISTS customer CASCADE;
+DROP TABLE IF EXISTS branch CASCADE;
+
 
 ---------------------------------------------------
 --- TABLES
@@ -34,27 +41,26 @@ CREATE TABLE super_categoria
 CREATE TABLE tem_outra
     (super_categoria CHAR(20) NOT NULL,
      categoria CHAR(20) NOT NULL,
-     CONSTRAINT chk_tem_outra CHECK (super_categoria != categoria),
      CONSTRAINT pk_tem_outra PRIMARY KEY(categoria),
      CONSTRAINT fk_tem_outra_categoria FOREIGN KEY(categoria) REFERENCES categoria(nome),
      CONSTRAINT fk_tem_outra_super_categoria FOREIGN KEY(super_categoria) REFERENCES super_categoria(nome));
 
 CREATE TABLE produto 
-    (ean SERIAL NOT NULL,
+    (ean INT NOT NULL,
      cat VARCHAR(80) NOT NULL,
      descr VARCHAR(200) NOT NULL,
      CONSTRAINT pk_produto PRIMARY KEY(ean),
      CONSTRAINT fk_produto_categoria FOREIGN KEY(cat) REFERENCES categoria(nome));
 
 CREATE TABLE tem_categoria
-    (ean SERIAL NOT NULL,
+    (ean INT NOT NULL,
      nome VARCHAR(80) NOT NULL,
      CONSTRAINT pk_tem_categoria_produto PRIMARY KEY(ean,nome),
      CONSTRAINT fk_tem_categoria_produto FOREIGN KEY(ean) REFERENCES produto(ean),
      CONSTRAINT fk_tem_categoria_categoria FOREIGN KEY(nome) REFERENCES categoria(nome));
 
 CREATE TABLE IVM 
-    (num_serie SERIAL NOT NULL,
+    (num_serie INT NOT NULL,
      fabricante VARCHAR(20) NOT NULL,
      CONSTRAINT pk_IVM PRIMARY KEY(num_serie,fabricante));
 
@@ -65,7 +71,7 @@ CREATE TABLE ponto_de_retalho
      CONSTRAINT pk_ponto_de_retalho PRIMARY KEY(nome));
 
 CREATE TABLE instalada_em
-    (num_serie SERIAL NOT NULL,
+    (num_serie INT NOT NULL,
      fabricante VARCHAR(20) NOT NULL,
      local_ VARCHAR(50) NOT NULL,
      CONSTRAINT pk_instalada_em PRIMARY KEY(num_serie, fabricante),
@@ -74,7 +80,7 @@ CREATE TABLE instalada_em
 
 CREATE TABLE prateleira
     (nro INT NOT NULL,
-     num_serie SERIAL NOT NULL,
+     num_serie INT NOT NULL,
      fabricante VARCHAR(20) NOT NULL,
      altura INT NOT NULL,
      nome VARCHAR(80) NOT NULL,
@@ -83,15 +89,15 @@ CREATE TABLE prateleira
      CONSTRAINT fk_prateleira_categoria FOREIGN KEY(nome) REFERENCES categoria(nome));
 
 CREATE TABLE planograma
-    (ean SERIAL NOT NULL,
+    (ean INT NOT NULL,
      nro INT NOT NULL,
-     num_serie SERIAL NOT NULL,
+     num_serie INT NOT NULL,
      fabricante VARCHAR(20) NOT NULL,
      faces INT NOT NULL,
-     unidades INT NOT NULL, 
+     unidades_plan INT NOT NULL, 
      loc VARCHAR(20) NOT NULL,
      CONSTRAINT pk_planograma PRIMARY KEY(ean, nro, num_serie, fabricante),
-     CONSTRAINT fk_planorama_produto FOREIGN KEY(ean) REFERENCES produto(ean),
+     CONSTRAINT fk_planograma_produto FOREIGN KEY(ean) REFERENCES produto(ean),
      CONSTRAINT fk_planograma_prateleira FOREIGN KEY(nro, num_serie, fabricante) REFERENCES prateleira(nro, num_serie, fabricante));
 
 CREATE TABLE retalhista
@@ -102,7 +108,7 @@ CREATE TABLE retalhista
 CREATE TABLE responsavel_por    
     (nome_cat VARCHAR(80) NOT NULL,
      tin INT NOT NULL,
-     num_serie SERIAL NOT NULL,
+     num_serie INT NOT NULL,
      fabricante VARCHAR(20) NOT NULL,
      CONSTRAINT pk_responsavel_por PRIMARY KEY(num_serie, fabricante),
      CONSTRAINT fk_responsavel_for_IVM FOREIGN KEY(num_serie, fabricante) REFERENCES IVM(num_serie, fabricante),
@@ -110,16 +116,107 @@ CREATE TABLE responsavel_por
      CONSTRAINT fk_responsavel_por_categoria FOREIGN KEY(nome_cat) REFERENCES categoria(nome));
 
 CREATE TABLE evento_reposicao
-    (ean SERIAL NOT NULL,
+    (ean INT NOT NULL,
      nro INT NOT NULL,
-     num_serie SERIAL NOT NULL,
+     num_serie INT NOT NULL,
      fabricante VARCHAR(20) NOT NULL,
      instante TIMESTAMP NOT NULL,
-     unidades INT NOT NULL,
+     unidades_evento INT NOT NULL,
      tin INT NOT NULL,
      CONSTRAINT pk_evento_reposicao PRIMARY KEY(ean, nro, num_serie, fabricante, instante),
      CONSTRAINT fk_evento_reposicao_planograma FOREIGN KEY(ean, nro, num_serie, fabricante) REFERENCES planograma(ean, nro, num_serie, fabricante),
      CONSTRAINT fk_evento_reposicao_retalhista FOREIGN KEY(tin) REFERENCES retalhista(tin));
+
+
+
+
+---------------------------------------------------
+-- CONSTRAINTS
+---------------------------------------------------
+--Triggers
+
+--1
+DROP FUNCTION IF EXISTS chk_categoria_proc();
+
+CREATE OR REPLACE FUNCTION chk_categoria_proc()
+RETURNS TRIGGER AS
+$$
+BEGIN
+    IF NEW.categoria = NEW.super_categoria THEN
+        RETURN NULL;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS chk_categoria_trigger ON tem_outra;
+
+CREATE TRIGGER chk_categoria_trigger
+BEFORE INSERT ON tem_outra
+FOR EACH ROW
+EXECUTE PROCEDURE chk_categoria_proc();
+
+--2
+
+DROP FUNCTION IF EXISTS chk_unidades_reposicao_proc();
+
+CREATE OR REPLACE FUNCTION chk_unidades_reposicao_proc()
+RETURNS TRIGGER AS
+$$
+DECLARE unidades_planograma INT;
+BEGIN
+    SELECT unidades_plan INTO unidades_planograma
+    FROM planograma WHERE
+    ean = NEW.ean AND num_serie = NEW.num_serie AND fabricante = NEW.fabricante AND nro = NEW.nro;
+    IF NEW.unidades_evento > unidades_planograma THEN
+        RETURN NULL;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS chk_unidades_reposicao_trigger ON evento_reposicao;
+
+CREATE TRIGGER chk_unidades_reposicao_trigger
+BEFORE INSERT ON evento_reposicao
+FOR EACH ROW
+EXECUTE PROCEDURE chk_unidades_reposicao_proc();
+
+--3
+
+DROP FUNCTION IF EXISTS chk_produto_reposto_proc();
+
+CREATE OR REPLACE FUNCTION chk_produto_reposto_proc()
+RETURNS TRIGGER AS
+$$
+DECLARE nome_categoria VARCHAR(80);
+DECLARE nome_prateleira VARCHAR(80);
+BEGIN
+    SELECT nome
+    INTO nome_categoria
+    FROM tem_categoria
+    WHERE NEW.ean = ean;
+
+    SELECT nome 
+    INTO nome_prateleira
+    FROM prateleira NATURAL JOIN planograma
+    WHERE NEW.ean = ean AND NEW.nro=nro AND NEW.num_serie=num_serie;
+    
+    IF nome_categoria != nome_prateleira THEN
+        RETURN NULL;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS chk_produto_reposto_trigger ON evento_reposicao;
+
+CREATE TRIGGER chk_produto_reposto_trigger
+BEFORE INSERT ON evento_reposicao
+FOR EACH ROW
+EXECUTE PROCEDURE chk_produto_reposto_proc();
+
 
 /* manuel is a little bitch. my little bitch :) */
 ---------------------------------------------------
@@ -172,7 +269,8 @@ INSERT INTO tem_outra VALUES
                             ('Bebidas', 'Sumos de Fruta'),
                             ('Sopas', 'Sopa Miso'),
                             ('Sopas', 'Sopa de Cenoura'),
-                            ('Sopas', 'Sopa de Favas');
+                            ('Sopas', 'Sopa de Favas'),
+                            ('Sopas', 'Sopas');
 
 -- Produto
 INSERT INTO produto VALUES 
@@ -201,7 +299,7 @@ INSERT INTO tem_categoria VALUES
                                 ('40','Refrigerantes'),
                                 ('50','Refrigerantes'),
                                 ('60', 'Bebidas Alcoólicas'),
-                                ('70','Barras Energéticas'),
+                                ('70','Bebidas Energéticas'),
                                 ('80','Bebidas Energéticas'),
                                 ('90','Sumos de Fruta'),
                                 ('100','Sumos de Fruta'),
@@ -246,12 +344,13 @@ INSERT INTO prateleira VALUES
 
 -- Planograma
 INSERT INTO planograma VALUES 
-                                ('60','1','1', 'Bosch','6','48','3'),
+                                ('50','1','1', 'Bosch','6','48','3'),
                                 ('70','2','3', 'Bosch','6','48','5'),
                                 ('120','3','5', 'Cristallo','5','40','5'),
                                 ('80','2','4', 'Atlante','8','64','8'),
                                 ('80','6','5', 'Cristallo','5','40','2'),
-                                ('140','5','2', 'Rowenta','4','32','3');
+                                ('140','5','2', 'Rowenta','4','32','3'),
+                                ('50','2','4', 'Atlante','8','64','8');
 
 -- Retalhista
 INSERT INTO retalhista VALUES
@@ -271,29 +370,10 @@ INSERT INTO responsavel_por VALUES
                                     ('Sopas','496320710','4','Atlante');
 
 -- Evento Reposição
-INSERT INTO evento_reposicao VALUES ('60','1', '1','Bosch','18/02/2022','40','102415639'),
-                                    ('120','3','5','Cristallo','21/05/2002','45','208913249');
+INSERT INTO evento_reposicao VALUES ('50','1', '1','Bosch','18/02/2022','48','102415639'),
+                                    ('120','3','5','Cristallo','21/05/2022','45','208913249'),
+                                    ('50','2','4','Atlante', '26/09/2022','60','496320710');
 
 
 
-
-
----------------------------------------------------
--- CONSTRAINTS
----------------------------------------------------
---Triggers
-
-CREATE FUNCTION chk_unidades_reposicao_proc()
-RETURN VOID AS
-$$
-BEGIN
-    IF NEW.unidades > planograma.unidades THEN
-        RAISE EXCEPTION 'Unidades repostas não podem exceder as do planograma'
-    END IF;
-END;
-$$ LANGUAGE sql;
-
-CREATE TRIGGER chk_unidades_reposicao_trigger
-BEFORE INSERT ON evento_reposicao
-FOR EACH ROW EXECUTE PROCEDURE chk_unidades_reposicao_proc();
   
