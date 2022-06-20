@@ -450,7 +450,8 @@ GROUP BY tin);
 
 
 SELECT name_ 
-FROM retalhista NATURAL JOIN responsavel_por RIGHT JOIN categoria_simples ON nome_cat=nome 
+FROM retalhista NATURAL JOIN responsavel_por RIGHT JOIN categoria_simples 
+ON nome_cat=nome 
 GROUP BY tin 
 HAVING (SELECT COUNT(*) FROM categoria_simples)=COUNT(nome_cat);
 
@@ -465,8 +466,29 @@ HAVING COUNT(evento_reposicao.ean) = 0;
 
 --- 4.
 SELECT ean 
-FROM (SELECT DISTINCT ean,tin FROM evento_reposicao) AS count_ean
+FROM (SELECT DISTINCT ean, tin FROM evento_reposicao) AS count_ean
 GROUP BY ean 
 HAVING COUNT(ean) = 1;
 */
 --------------------------------------------------
+CREATE OR REPLACE VIEW vendas AS
+SELECT ean,
+    cat.nome AS cat, 
+    EXTRACT(YEAR FROM instante) AS ano, 
+    EXTRACT(QUARTER FROM instante) AS trimestre, 
+    EXTRACT(DAY FROM instante) AS dia_mes, 
+    CASE EXTRACT(DOW FROM instante)
+        WHEN 0 THEN 'Domingo'
+        WHEN 1 THEN 'Segunda'
+        WHEN 2 THEN 'Terça'
+        WHEN 3 THEN 'Quarta'
+        WHEN 4 THEN 'Quinta'
+        WHEN 5 THEN 'Sexta'
+        WHEN 6 THEN 'Sábado'
+    END AS dia_semana, 
+    distrito, 
+    concelho, 
+    unidades_evento AS unidades 
+    FROM tem_categoria AS cat NATURAL JOIN evento_reposicao
+        NATURAL JOIN instalada_em  
+        JOIN ponto_de_retalho ON local_ = ponto_de_retalho.nome;
