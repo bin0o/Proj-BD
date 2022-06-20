@@ -21,7 +21,7 @@ DROP TABLE IF EXISTS branch CASCADE;
 
 
 ---------------------------------------------------
---- TABLES
+--- TABLE CREATION
 ---------------------------------------------------
 
 CREATE TABLE categoria
@@ -128,8 +128,6 @@ CREATE TABLE evento_reposicao
      CONSTRAINT fk_evento_reposicao_retalhista FOREIGN KEY(tin) REFERENCES retalhista(tin));
 
 
-
-
 ---------------------------------------------------
 -- CONSTRAINTS
 ---------------------------------------------------
@@ -220,7 +218,7 @@ EXECUTE PROCEDURE chk_produto_reposto_proc();
 
 /* manuel is a little bitch. my little bitch :) */
 ---------------------------------------------------
--- POPULATING
+-- POPULATE RELATIONS
 ---------------------------------------------------
 -- Categoria
 INSERT INTO categoria VALUES 
@@ -234,10 +232,7 @@ INSERT INTO categoria VALUES
                             ('Sumos de Fruta'),
                             ('Fruta'),
                             ('Legumes'),
-                            ('Sopas'),
-                            ('Sopa Miso'),
-                            ('Sopa de Cenoura'),
-                            ('Sopa de Favas');
+                            ('Sopas');
 
 -- Categoria Simples
 INSERT INTO categoria_simples VALUES 
@@ -249,15 +244,12 @@ INSERT INTO categoria_simples VALUES
                                     ('Sumos de Fruta'),
                                     ('Fruta'),
                                     ('Legumes'),
-                                    ('Sopa Miso'),
-                                    ('Sopa de Cenoura'),
-                                    ('Sopa de Favas');
+                                    ('Sopas');
 
 -- Super Categoria
 INSERT INTO super_categoria VALUES 
                                     ('Barras'),
-                                    ('Bebidas'),
-                                    ('Sopas');
+                                    ('Bebidas');
 
 -- Tem Outra
 INSERT INTO tem_outra VALUES 
@@ -266,11 +258,7 @@ INSERT INTO tem_outra VALUES
                             ('Bebidas','Refrigerantes'),
                             ('Bebidas', 'Bebidas Alcoólicas'),
                             ('Bebidas', 'Bebidas Energéticas'),
-                            ('Bebidas', 'Sumos de Fruta'),
-                            ('Sopas', 'Sopa Miso'),
-                            ('Sopas', 'Sopa de Cenoura'),
-                            ('Sopas', 'Sopa de Favas'),
-                            ('Sopas', 'Sopas');
+                            ('Bebidas', 'Sumos de Fruta');
 
 -- Produto
 INSERT INTO produto VALUES 
@@ -288,13 +276,13 @@ INSERT INTO produto VALUES
                         ('120','Fruta','Pêra'),
                         ('130','Legumes','Espinafre'),
                         ('140','Legumes','Cenoura'),
-                        ('150','Sopa Miso','Sopa Miso Simples'),
-                        ('160','Sopa Miso','Sopa Miso com Cogumelos');
+                        ('150','Sopas','Sopa Miso'),
+                        ('160','Sopas','Sopa de Cenoura');
 
 -- Tem Categoria
 INSERT INTO tem_categoria VALUES
                                 ('10','Barras Energéticas'),
-                                ('20','Barras Energéticas'),
+                                ('20','Barras'),
                                 ('30','Barras de Frutas'),
                                 ('40','Refrigerantes'),
                                 ('50','Refrigerantes'),
@@ -307,8 +295,8 @@ INSERT INTO tem_categoria VALUES
                                 ('120','Fruta'),
                                 ('130','Legumes'),
                                 ('140','Legumes'),
-                                ('150','Sopa Miso'),
-                                ('160','Sopa Miso');
+                                ('150','Sopas'),
+                                ('160','Sopas');
 
 -- IVM
 INSERT INTO IVM VALUES 
@@ -316,13 +304,27 @@ INSERT INTO IVM VALUES
                     ('2','Rowenta'),
                     ('3','Bosch'),
                     ('4','Atlante'),
-                    ('5','Cristallo');
+                    ('5','Cristallo'),
+                    ('6','Atlante'),
+                    ('7', 'Cristallo'),
+                    
+                    ('8','IVM1'),
+                    ('9','IVM2'),
+                    ('10','IVM3'),
+                    ('11','IVM4'),
+                    ('12','IVM5'),
+                    ('13','IVM6'),
+                    ('14', 'IVM7'),
+                    ('15', 'IVM8'),
+                    ('16', 'IVM9'),
+                    ('17', 'IVM10');
 
 -- Ponto de Retalho
 INSERT INTO ponto_de_retalho VALUES 
                                     ('IST-Taguspark','Lisboa','Oeiras'),
                                     ('Repsol-Lisboa','Lisboa','Oriente'),
-                                    ('Fórum-Castelo Branco','Castelo Branco','Castelo Branco');
+                                    ('Fórum-Castelo Branco','Castelo Branco','Castelo Branco'),
+                                    ('IST-Alameda','Lisboa','Lisboa');
 
 -- Instalada Em
 INSERT INTO instalada_em VALUES 
@@ -330,27 +332,63 @@ INSERT INTO instalada_em VALUES
                                 ('2','Rowenta','Fórum-Castelo Branco'),
                                 ('3','Bosch','IST-Taguspark'),
                                 ('4','Atlante','IST-Taguspark'),
-                                ('5','Cristallo','Fórum-Castelo Branco');
+                                ('5','Cristallo','Fórum-Castelo Branco'),
+                                ('6','Atlante','Repsol-Lisboa'),
+                                ('7','Cristallo','IST-Alameda'),
+                                
+                                ('8','IVM1','Repsol-Lisboa'),
+                                ('9','IVM2','Repsol-Lisboa'),
+                                ('10','IVM3','Repsol-Lisboa'),
+                                ('11','IVM4','Repsol-Lisboa'),
+                                ('12','IVM5','Repsol-Lisboa'),
+                                ('13','IVM6','Repsol-Lisboa' ),
+                                ('14', 'IVM7','Repsol-Lisboa' ),
+                                ('15', 'IVM8','Repsol-Lisboa' ),
+                                ('16', 'IVM9','Repsol-Lisboa' ),
+                                ('17','IVM10','Repsol-Lisboa');
 
 -- Prateleira
 INSERT INTO prateleira VALUES 
                                 ('1','1','Bosch','15','Refrigerantes'),
                                 ('2','3','Bosch','15','Barras Energéticas'),
                                 ('1','4','Atlante','15','Sopas'),
-                                ('2','4','Atlante','15','Fruta'),
+                                ('2','4','Atlante','15','Refrigerantes'),
                                 ('3','5','Cristallo','15','Fruta'),
-                                ('6','5','Cristallo','15','Bebidas Alcoólicas'),
-                                ('5','2','Rowenta','15','Sumos de Fruta');
+                                ('6','5','Cristallo','15','Bebidas Energéticas'),
+                                ('5','2','Rowenta','15','Sumos de Fruta'),
+                                ('5','7','Cristallo','15','Bebidas Energéticas'),
+
+                                ('1','8','IVM1','15','Barras Energéticas'),
+                                ('1','9','IVM2','15','Barras de Frutas'),
+                                ('1','10','IVM3','15','Refrigerantes'),
+                                ('1','11','IVM4','15','Bebidas Alcoólicas'),
+                                ('1','12','IVM5','15','Bebidas Energéticas'),
+                                ('1','13','IVM6','15','Sumos de Fruta'),
+                                ('1','14','IVM7','15','Fruta'),
+                                ('1','15','IVM8','15','Legumes'),
+                                ('1','16','IVM9','15','Sopas'),
+                                ('1','17','IVM10','15','Barras');
 
 -- Planograma
 INSERT INTO planograma VALUES 
                                 ('50','1','1', 'Bosch','6','48','3'),
                                 ('70','2','3', 'Bosch','6','48','5'),
                                 ('120','3','5', 'Cristallo','5','40','5'),
-                                ('80','2','4', 'Atlante','8','64','8'),
+                                ('50','2','4', 'Atlante','8','64','8'),
                                 ('80','6','5', 'Cristallo','5','40','2'),
                                 ('140','5','2', 'Rowenta','4','32','3'),
-                                ('50','2','4', 'Atlante','8','64','8');
+                                ('80','5','7', 'Cristallo','5','40','2'),
+
+                                ('10','1','8','IVM1','6','48','3'),
+                                ('30','1','9','IVM2','6','48','3'),
+                                ('50','1','10','IVM3','6','48','3'),
+                                ('60','1','11','IVM4','6','48','3'),
+                                ('80','1','12','IVM5','6','48','3'),
+                                ('100','1','13','IVM6','6','48','3'),
+                                ('120','1','14','IVM7','6','48','3'),
+                                ('140','1','15','IVM8','6','48','3'),
+                                ('160','1','16','IVM9','6','48','3'),
+                                ('20','1','17','IVM10','6','48','3');
 
 -- Retalhista
 INSERT INTO retalhista VALUES
@@ -364,16 +402,71 @@ INSERT INTO retalhista VALUES
 -- Responsável Por
 INSERT INTO responsavel_por VALUES 
                                     ('Refrigerantes','102415639','1','Bosch'),
-                                    ('Barras Energéticas','968720710','3','Bosch'),
+                                    ('Barras Energéticas','102415639','3','Bosch'),
                                     ('Sumos de Fruta','968746229','2','Rowenta'),
                                     ('Fruta','208913249','5','Cristallo'),
-                                    ('Sopas','496320710','4','Atlante');
+                                    ('Refrigerantes','496320710','4','Atlante'),
+                                    ('Refrigerantes','496320710','6','Atlante'),
+                                    ('Bebidas Energéticas','496326229','7','Cristallo'),
+
+                                    ('Barras Energéticas','968720710','8','IVM1'),
+                                    ('Barras de Frutas','968720710','9','IVM2'),
+                                    ('Refrigerantes','968720710','10','IVM3'),
+                                    ('Bebidas Alcoólicas','968720710','11','IVM4'),
+                                    ('Bebidas Energéticas','968720710','12','IVM5'),
+                                    ('Sumos de Fruta','968720710','13','IVM6'),
+                                    ('Fruta','968720710','14','IVM7'),
+                                    ('Legumes','968720710','15','IVM8'),
+                                    ('Sopas','968720710','16','IVM9'),
+                                    ('Barras','968720710','17','IVM10');
 
 -- Evento Reposição
 INSERT INTO evento_reposicao VALUES ('50','1', '1','Bosch','18/02/2022','48','102415639'),
-                                    ('120','3','5','Cristallo','21/05/2022','45','208913249'),
-                                    ('50','2','4','Atlante', '26/09/2022','60','496320710');
+                                    ('120','3','5','Cristallo','21/05/2022','39','208913249'),
+                                    ('50','2','4','Atlante', '26/09/2022','60','496320710'),
+                                    ('50','1', '1','Bosch','18/02/2023','48','102415639'),
+                                    ('120','3','5','Cristallo','22/05/2022','39','208913249'),
+                                    ('80','5','7', 'Cristallo', '20/06/2022', '35', '496326229');
 
 
 
-  
+
+--------------------------------------------------
+-- SQL
+--------------------------------------------------
+/*
+--- 1.
+
+SELECT name_ 
+FROM retalhista NATURAL JOIN responsavel_por 
+GROUP BY tin
+HAVING COUNT(nome_cat) >= ALL(
+SELECT COUNT(nome_cat) 
+FROM retalhista NATURAL JOIN responsavel_por
+GROUP BY tin);
+
+
+--- 2.
+
+
+SELECT name_ 
+FROM retalhista NATURAL JOIN responsavel_por RIGHT JOIN categoria_simples ON nome_cat=nome 
+GROUP BY tin 
+HAVING (SELECT COUNT(*) FROM categoria_simples)=COUNT(nome_cat);
+
+
+--- 3.
+
+SELECT produto.ean 
+FROM evento_reposicao RIGHT JOIN produto 
+ON produto.ean = evento_reposicao.ean 
+GROUP BY produto.ean 
+HAVING COUNT(evento_reposicao.ean) = 0;
+
+--- 4.
+SELECT ean 
+FROM (SELECT DISTINCT ean,tin FROM evento_reposicao) AS count_ean
+GROUP BY ean 
+HAVING COUNT(ean) = 1;
+*/
+--------------------------------------------------
