@@ -136,7 +136,7 @@ RETURNS TRIGGER AS
 $$
 BEGIN
     IF NEW.categoria = NEW.super_categoria THEN
-        RETURN NULL;
+        Raise Exception 'Uma Categoria não pode estar contida em si própria';
     END IF;
     RETURN NEW;
 END;
@@ -162,7 +162,8 @@ BEGIN
     FROM planograma WHERE
     ean = NEW.ean AND num_serie = NEW.num_serie AND fabricante = NEW.fabricante AND nro = NEW.nro;
     IF NEW.unidades_evento > unidades_planograma THEN
-        RETURN NULL;
+        RAISE EXCEPTION 'O número de unidades repostas num Evento de Reposição
+        não pode exceder o número de unidades especificado no Planograma';
     END IF;
     RETURN NEW;
 END;
@@ -196,9 +197,9 @@ BEGIN
     WHERE NEW.ean = ean AND NEW.nro=nro AND NEW.num_serie=num_serie;
     
     IF nome_categoria != nome_prateleira THEN
-        RETURN NULL;
+        RAISE EXCEPTION 'Um Produto só pode ser reposto numa Prateleira
+        que apresente (pelo menos) uma das Categorias desse produto';
     END IF;
-
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -416,11 +417,11 @@ INSERT INTO responsavel_por VALUES
                                     ('Barras','968720710','17','IVM10');
 
 -- Evento Reposição
-INSERT INTO evento_reposicao VALUES ('50','1', '1','Bosch','18/02/2022','48','102415639'),
-                                    ('120','3','5','Cristallo','21/05/2022','39','208913249'),
-                                    ('50','2','4','Atlante', '26/09/2022','60','496320710'),
-                                    ('50','1', '1','Bosch','18/02/2023','48','102415639'),
-                                    ('120','3','5','Cristallo','22/05/2022','39','208913249'),
+INSERT INTO evento_reposicao VALUES ('50','1', '1','Bosch','18/02/2022','10','102415639'),
+                                    ('120','3','5','Cristallo','21/05/2022','15','208913249'),
+                                    ('50','2','4','Atlante', '26/09/2022','20','496320710'),
+                                    ('50','1', '1','Bosch','18/02/2023','25','102415639'),
+                                    ('120','3','5','Cristallo','22/05/2022','30','208913249'),
                                     ('80','5','7', 'Cristallo', '20/06/2022', '35', '496326229');
 
 
@@ -488,3 +489,26 @@ SELECT ean,
     FROM tem_categoria AS cat NATURAL JOIN evento_reposicao
         NATURAL JOIN instalada_em  
         JOIN ponto_de_retalho ON local_ = ponto_de_retalho.nome;
+
+
+---------------------------------------------
+--OLAP
+---------------------------------------------
+--1
+-- SELECT  dia_semana, concelho, SUM(unidades) 
+-- FROM vendas 
+-- WHERE (ano > 2022 OR (ano = 2022  AND ( mes > 5 OR  ( mes=5 AND (dia_mes >= 21))))) 
+-- AND (ano<2023 OR (ano=2023 AND (mes < 2 OR (mes = 2 AND (dia_mes <=18))))) 
+-- GROUP BY CUBE(dia_semana,concelho) ORDER BY(dia_semana,concelho);
+--2
+-- SELECT concelho, cat, dia_semana, SUM(unidades)
+-- FROM vendas
+-- WHERE distrito = 'Lisboa'
+-- GROUP BY CUBE(concelho,cat,dia_semana)
+-- ORDER BY(concelho, cat, dia_semana);
+-- 2.1
+-- SELECT concelho, cat, dia_semana, SUM(unidades)
+-- FROM vendas
+-- WHERE distrito = 'Lisboa'
+-- GROUP BY GROUPING SETS((concelho),(cat),(dia_semana),())
+-- ORDER BY(concelho, cat, dia_semana);
