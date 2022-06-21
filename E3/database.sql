@@ -26,33 +26,33 @@ CREATE TABLE categoria
 CREATE TABLE categoria_simples
     (nome VARCHAR(80) NOT NULL,
      CONSTRAINT pk_categoria_simples PRIMARY KEY(nome),
-     CONSTRAINT fk_categoria_simples_categoria FOREIGN KEY(nome) REFERENCES categoria(nome));
+     CONSTRAINT fk_categoria_simples_categoria FOREIGN KEY(nome) REFERENCES categoria(nome) ON DELETE CASCADE);
 
 CREATE TABLE super_categoria
     (nome VARCHAR(80) NOT NULL,
      CONSTRAINT pk_super_categoria PRIMARY KEY(nome),
-     CONSTRAINT fk_super_categoria_categoria FOREIGN KEY(nome) REFERENCES categoria(nome));
+     CONSTRAINT fk_super_categoria_categoria FOREIGN KEY(nome) REFERENCES categoria(nome) ON DELETE CASCADE);
 
 CREATE TABLE tem_outra
     (super_categoria CHAR(20) NOT NULL,
      categoria CHAR(20) NOT NULL,
      CONSTRAINT pk_tem_outra PRIMARY KEY(categoria),
-     CONSTRAINT fk_tem_outra_categoria FOREIGN KEY(categoria) REFERENCES categoria(nome),
-     CONSTRAINT fk_tem_outra_super_categoria FOREIGN KEY(super_categoria) REFERENCES super_categoria(nome));
+     CONSTRAINT fk_tem_outra_categoria FOREIGN KEY(categoria) REFERENCES categoria(nome) ON DELETE CASCADE,
+     CONSTRAINT fk_tem_outra_super_categoria FOREIGN KEY(super_categoria) REFERENCES super_categoria(nome) ON DELETE CASCADE);
 
 CREATE TABLE produto 
     (ean INT NOT NULL,
      cat VARCHAR(80) NOT NULL,
      descr VARCHAR(200) NOT NULL,
      CONSTRAINT pk_produto PRIMARY KEY(ean),
-     CONSTRAINT fk_produto_categoria FOREIGN KEY(cat) REFERENCES categoria(nome));
+     CONSTRAINT fk_produto_categoria FOREIGN KEY(cat) REFERENCES categoria(nome) ON DELETE CASCADE);
 
 CREATE TABLE tem_categoria
     (ean INT NOT NULL,
      nome VARCHAR(80) NOT NULL,
      CONSTRAINT pk_tem_categoria_produto PRIMARY KEY(ean,nome),
      CONSTRAINT fk_tem_categoria_produto FOREIGN KEY(ean) REFERENCES produto(ean),
-     CONSTRAINT fk_tem_categoria_categoria FOREIGN KEY(nome) REFERENCES categoria(nome));
+     CONSTRAINT fk_tem_categoria_categoria FOREIGN KEY(nome) REFERENCES categoria(nome) ON DELETE CASCADE);
 
 CREATE TABLE IVM 
     (num_serie INT NOT NULL,
@@ -81,7 +81,7 @@ CREATE TABLE prateleira
      nome VARCHAR(80) NOT NULL,
      CONSTRAINT pk_prateleira PRIMARY KEY(nro,num_serie, fabricante),
      CONSTRAINT fk_prateleira_IVM FOREIGN KEY(num_serie, fabricante) REFERENCES IVM(num_serie, fabricante),
-     CONSTRAINT fk_prateleira_categoria FOREIGN KEY(nome) REFERENCES categoria(nome));
+     CONSTRAINT fk_prateleira_categoria FOREIGN KEY(nome) REFERENCES categoria(nome) ON DELETE CASCADE);
 
 CREATE TABLE planograma
     (ean INT NOT NULL,
@@ -107,8 +107,8 @@ CREATE TABLE responsavel_por
      fabricante VARCHAR(20) NOT NULL,
      CONSTRAINT pk_responsavel_por PRIMARY KEY(num_serie, fabricante),
      CONSTRAINT fk_responsavel_for_IVM FOREIGN KEY(num_serie, fabricante) REFERENCES IVM(num_serie, fabricante),
-     CONSTRAINT fk_responsavel_por_retalhista FOREIGN KEY(tin) REFERENCES retalhista(tin),
-     CONSTRAINT fk_responsavel_por_categoria FOREIGN KEY(nome_cat) REFERENCES categoria(nome));
+     CONSTRAINT fk_responsavel_por_retalhista FOREIGN KEY(tin) REFERENCES retalhista(tin) ON DELETE CASCADE,
+     CONSTRAINT fk_responsavel_por_categoria FOREIGN KEY(nome_cat) REFERENCES categoria(nome) ON DELETE CASCADE);
 
 CREATE TABLE evento_reposicao
     (ean INT NOT NULL,
@@ -120,7 +120,7 @@ CREATE TABLE evento_reposicao
      tin INT NOT NULL,
      CONSTRAINT pk_evento_reposicao PRIMARY KEY(ean, nro, num_serie, fabricante, instante),
      CONSTRAINT fk_evento_reposicao_planograma FOREIGN KEY(ean, nro, num_serie, fabricante) REFERENCES planograma(ean, nro, num_serie, fabricante),
-     CONSTRAINT fk_evento_reposicao_retalhista FOREIGN KEY(tin) REFERENCES retalhista(tin));
+     CONSTRAINT fk_evento_reposicao_retalhista FOREIGN KEY(tin) REFERENCES retalhista(tin) ON DELETE CASCADE);
 
 
 ---------------------------------------------------

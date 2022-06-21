@@ -7,9 +7,9 @@ import psycopg2.extras
 
 ## SGBD configs
 DB_HOST = "db.tecnico.ulisboa.pt"
-DB_USER = "ist199108"
+DB_USER = ""
 DB_DATABASE = DB_USER
-DB_PASSWORD = "Tochinha18"
+DB_PASSWORD = ""
 DB_CONNECTION_STRING = "host=%s dbname=%s user=%s password=%s" % (
     DB_HOST,
     DB_DATABASE,
@@ -51,6 +51,27 @@ def inserir_cat():
         return render_template("inserir_categoria.html", params=request.args)
     except Exception as e:
         return str(e)
+    
+    
+@app.route("/update_categoria", methods=["POST"])
+def update_categoria():
+    dbConn = None
+    cursor = None
+    try:
+        dbConn = psycopg2.connect(DB_CONNECTION_STRING)
+        cursor = dbConn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        balance = request.form["balance"]
+        account_number = request.form["account_number"]
+        query = "UPDATE account SET balance=%s WHERE account_number = %s"
+        data = (balance, account_number)
+        cursor.execute(query, data)
+        return query
+    except Exception as e:
+        return str(e)
+    finally:
+        dbConn.commit()
+        cursor.close()
+        dbConn.close()
 
 @app.route("/categorias/remover_categoria")
 def remover_cat():
