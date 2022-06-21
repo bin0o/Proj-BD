@@ -2,27 +2,36 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>List accounts - Flask</title>
+    <title>Lista Categorias</title>
 </head>
+<style>
+    table {
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #DDD
+}
+</style>
 <body style="padding:20px">
 {% if cursor %}
     <table border="2px">
         <thead>
             <tr>
-                <th>Conta</th>
-                <th>Agência</th>
-                <th>Saldo</th>
-                <th>Alterar</th>
+                <th>Categorias</th>
+                <th>Remover</th>
+            </tr>
+            <tr>
+                <td><a href="inserir_categoria">Inserir</a></td>
             </tr>
         </thead>
         <tbody>
             {% for record in cursor %}
                 <tr>
                     <td>{{ record[0] }}</td>
-                    <td>{{ record[1] }}</td>
-                    <td>{{ record[2] }}</td>
-                    <td><a href="balance?account_number={{ record[0] }}">Alterar
-                    saldo</a></td>
+                    <td><a href="/categorias/remover_categoria">Remover</a></td>
                 </tr>
             {% endfor %}
         </tbody>

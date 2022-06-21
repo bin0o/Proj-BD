@@ -2,30 +2,38 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>List accounts - Flask</title>
+    <title>E3 - Aplicação</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body style="padding:20px">
-{% if cursor %}
-    <table border="2px">
+<style>
+    table {
+  border-collapse: collapse;
+  width: 100%
+}
+
+th, td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #DDD
+}
+
+tr:hover {background-color: #bbdbff;}
+</style>
+<body>
+    <h2>Desenvolvimento da Aplicação</h2>
+    <p>Selecione uma das seguintes opções.</p>
+    <table>
         <thead>
             <tr>
-                <th>Conta</th>
-                <th>Agência</th>
-                <th>Saldo</th>
+                <td><a href="categorias">Categorias</a></td>
+            </tr>
+            <tr>
+                <th>Retalhistas</th>
+            </tr>
+            <tr>
+                <th>Eventos de Reposição</th>
             </tr>
         </thead>
-        <tbody>
-            {% for record in cursor %}
-            <tr>
-                <td>{{ record[0] }}</td>
-                <td>{{ record[1] }}</td>
-                <td>{{ record[2] }}</td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-{% else %}
-    <p> Erro: ao obter dados da base de dados!</p>
-{% endif %}
+    </table>
 </body>
 </html>
