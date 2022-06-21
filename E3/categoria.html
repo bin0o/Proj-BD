@@ -24,14 +24,17 @@ th, td {
                 <th>Remover</th>
             </tr>
             <tr>
-                <td><a href="inserir_categoria">Inserir</a></td>
+                <td><a href="inserir_categoria_simples">Inserir Categoria Simples</a></td>
+            </tr>
+            <tr>
+                <td><a href="inserir_super_categoria">Inserir Super Categoria</a></td>
             </tr>
         </thead>
         <tbody>
             {% for record in cursor %}
                 <tr>
                     <td>{{ record[0] }}</td>
-                    <td><a href="/categorias/remover_categoria">Remover</a></td>
+                    <td><a href="categorias/remover_categoria">Remover</a></td>
                 </tr>
             {% endfor %}
         </tbody>

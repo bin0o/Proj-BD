@@ -13,6 +13,9 @@ DROP TABLE IF EXISTS retalhista CASCADE;
 DROP TABLE IF EXISTS responsavel_por CASCADE;
 DROP TABLE IF EXISTS evento_reposicao CASCADE;
 
+DROP INDEX IF EXISTS responsavel_por_idx;
+DROP INDEX IF EXISTS produto_idx;
+
 
 
 ---------------------------------------------------
@@ -512,3 +515,13 @@ SELECT ean,
 -- WHERE distrito = 'Lisboa'
 -- GROUP BY GROUPING SETS((concelho),(cat),(dia_semana),())
 -- ORDER BY(concelho, cat, dia_semana);
+
+
+---------------------------------------------
+--Índices
+---------------------------------------------
+--7.1
+CREATE INDEX responsavel_por_idx ON responsavel_por(tin, nome_cat);
+--7.2
+CREATE INDEX produto_idx ON produto(cat, descr);
+

@@ -45,25 +45,34 @@ def lista_cats():
         dbConn.close()
 
 
-@app.route("/inserir_categoria")
-def inserir_cat():
+@app.route("/inserir_categoria_simples")
+def inserir_cat_simples():
     try:
-        return render_template("inserir_categoria.html", params=request.args)
+        return render_template("inserir_cat_simples.html", params=request.args)
     except Exception as e:
         return str(e)
     
-    
-@app.route("/update_categoria", methods=["POST"])
-def update_categoria():
+@app.route("/inserir_super_categoria")
+def inserir_supercat():
+    try:
+        return render_template("inserir_super_cat.html", params=request.args)
+    except Exception as e:
+        return str(e)
+
+
+@app.route("/update_categoria_simples", methods=["POST"])
+def update_categoria_simples():
     dbConn = None
     cursor = None
     try:
         dbConn = psycopg2.connect(DB_CONNECTION_STRING)
         cursor = dbConn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        balance = request.form["balance"]
-        account_number = request.form["account_number"]
-        query = "UPDATE account SET balance=%s WHERE account_number = %s"
-        data = (balance, account_number)
+        name = request.form["name"]
+        query = "INSERT INTO categoria VALUES(%s)"
+        data = (name,)
+        cursor.execute(query, data)
+        query = "INSERT INTO categoria_simples VALUES(%s)"
+        data = (name,)
         cursor.execute(query, data)
         return query
     except Exception as e:
@@ -72,33 +81,35 @@ def update_categoria():
         dbConn.commit()
         cursor.close()
         dbConn.close()
-
+        
+@app.route("/update_super_categoria", methods=["POST"])
+def update_super_categoria():
+    dbConn = None
+    cursor = None
+    try:
+        dbConn = psycopg2.connect(DB_CONNECTION_STRING)
+        cursor = dbConn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        name = request.form["name"]
+        query = "INSERT INTO categoria VALUES(%s)"
+        data = (name,)
+        cursor.execute(query, data)
+        query = "INSERT INTO super_categoria VALUES(%s)"
+        data = (name,)
+        cursor.execute(query, data)
+        return query
+    except Exception as e:
+        return str(e)
+    finally:
+        dbConn.commit()
+        cursor.close()
+        dbConn.close()
+        
+        
 @app.route("/categorias/remover_categoria")
 def remover_cat():
     try:
         return render_template("remover_categoria.html", params=request.args)
     except Exception as e:
         return str(e)
-
-# @app.route("/update", methods=["POST"])
-# def update_balance():
-#     dbConn = None
-#     cursor = None
-#     try:
-#         dbConn = psycopg2.connect(DB_CONNECTION_STRING)
-#         cursor = dbConn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-#         balance = request.form["balance"]
-#         account_number = request.form["account_number"]
-#         query = "UPDATE account SET balance=%s WHERE account_number = %s"
-#         data = (balance, account_number)
-#         cursor.execute(query, data)
-#         return query
-#     except Exception as e:
-#         return str(e)
-#     finally:
-#         dbConn.commit()
-#         cursor.close()
-#         dbConn.close()
-
 
 CGIHandler().run(app)
