@@ -471,6 +471,7 @@ SELECT ean,
     cat.nome AS cat, 
     EXTRACT(YEAR FROM instante) AS ano, 
     EXTRACT(QUARTER FROM instante) AS trimestre, 
+    EXTRACT(MONTH FROM instante) AS mes,
     EXTRACT(DAY FROM instante) AS dia_mes, 
     CASE EXTRACT(DOW FROM instante)
         WHEN 0 THEN 'Domingo'
