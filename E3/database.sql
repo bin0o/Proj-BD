@@ -316,7 +316,8 @@ INSERT INTO IVM VALUES
                     ('14', 'IVM7'),
                     ('15', 'IVM8'),
                     ('16', 'IVM9'),
-                    ('17', 'IVM10');
+                    ('17', 'IVM10'),
+                    ('18', 'Bosch');
 
 -- Ponto de Retalho
 INSERT INTO ponto_de_retalho VALUES 
@@ -344,7 +345,8 @@ INSERT INTO instalada_em VALUES
                                 ('14', 'IVM7','Repsol-Lisboa' ),
                                 ('15', 'IVM8','Repsol-Lisboa' ),
                                 ('16', 'IVM9','Repsol-Lisboa' ),
-                                ('17','IVM10','Repsol-Lisboa');
+                                ('17','IVM10','Repsol-Lisboa'),
+                                ('18','Bosch','Repsol-Lisboa');
 
 -- Prateleira
 INSERT INTO prateleira VALUES 
@@ -366,7 +368,8 @@ INSERT INTO prateleira VALUES
                                 ('1','14','IVM7','15','Fruta'),
                                 ('1','15','IVM8','15','Legumes'),
                                 ('1','16','IVM9','15','Sopas'),
-                                ('1','17','IVM10','15','Barras');
+                                ('1','17','IVM10','15','Barras'),
+                                ('1','18','Bosch','15','Fruta');
 
 -- Planograma
 INSERT INTO planograma VALUES 
@@ -387,7 +390,8 @@ INSERT INTO planograma VALUES
                                 ('120','1','14','IVM7','6','48','3'),
                                 ('140','1','15','IVM8','6','48','3'),
                                 ('160','1','16','IVM9','6','48','3'),
-                                ('20','1','17','IVM10','6','48','3');
+                                ('20','1','17','IVM10','6','48','3'),
+                                ('110','1','18','Bosch','6','48','3');
 
 -- Retalhista
 INSERT INTO retalhista VALUES
@@ -521,7 +525,58 @@ SELECT ean,
 --Índices
 ---------------------------------------------
 --7.1
+
+/*
+EXPLAIN SELECT DISTINCT R.name_
+ FROM retalhista R, responsavel_por P
+ WHERE R.tin = P.tin and P.nome_cat = 'Frutos';
+
+Unique  (cost=9.43..9.44 rows=1 width=178) (actual time=0.038..0.040 rows=0 loops=1)
+   ->  Sort  (cost=9.43..9.43 rows=1 width=178) (actual time=0.037..0.039 rows=0 loops=1)
+         Sort Key: r.name_
+         Sort Method: quicksort  Memory: 25kB
+         ->  Nested Loop  (cost=0.15..9.42 rows=1 width=178) (actual time=0.007..0.008 rows=0 loops=1)
+               ->  Seq Scan on responsavel_por p  (cost=0.00..1.21 rows=1 width=4) (actual time=0.006..0.007 rows=0 loops=1)
+                     Filter: ((nome_cat)::text = 'Frutos'::text)
+                     Rows Removed by Filter: 17
+               ->  Index Scan using pk_retalhista on retalhista r  (cost=0.15..8.17 rows=1 width=182) (never executed)
+                     Index Cond: (tin = p.tin)
+ Planning Time: 0.091 ms
+ Execution Time: 0.055 ms
+                    
+Criamos um índice Btree pois as interrogações na query requerer mais que uma comparação,
+e apenas criamos na tabela responsavel_por pois é a única tabela presente na query
+que tem atributos não primários que usamos para fazer a seleção.
+*/
+
 CREATE INDEX responsavel_por_idx ON responsavel_por(tin, nome_cat);
+
 --7.2
-CREATE INDEX produto_idx ON produto(cat, descr);
+ /*
+EXPLAIN SELECT T.nome, count(T.ean)
+ FROM produto P, tem_categoria T
+ WHERE p.cat = T.nome and P.descr like 'A%'
+ GROUP BY T.nome;
+
+Unique  (cost=9.43..9.44 rows=1 width=178) (actual time=0.038..0.040 rows=0 loops=1)
+   ->  Sort  (cost=9.43..9.43 rows=1 width=178) (actual time=0.037..0.039 rows=0 loops=1)
+         Sort Key: r.name_
+         Sort Method: quicksort  Memory: 25kB
+         ->  Nested Loop  (cost=0.15..9.42 rows=1 width=178) (actual time=0.007..0.008 rows=0 loops=1)
+               ->  Seq Scan on responsavel_por p  (cost=0.00..1.21 rows=1 width=4) (actual time=0.006..0.007 rows=0 loops=1)
+                     Filter: ((nome_cat)::text = 'Frutos'::text)
+                     Rows Removed by Filter: 17
+               ->  Index Scan using pk_retalhista on retalhista r  (cost=0.15..8.17 rows=1 width=182) (never executed)
+                     Index Cond: (tin = p.tin)
+ Planning Time: 0.091 ms
+ Execution Time: 0.055 ms
+
+Criamos apenas um índice de HASH visto ser o melhor para seleção de igualdade,
+e apenas criamos na tabela produto pois é a única tabela presente na query
+que tem um atributo não primário que necessitamos para fazer a seleção.
+Não vale a pena criar um índice para o atributo produto.descr pois não estamos a pedir
+um valor exato na query, mas sim uma expressão, através do 'LIKE'.
+*/
+
+CREATE INDEX produto_idx ON produto USING HASH(cat);
 

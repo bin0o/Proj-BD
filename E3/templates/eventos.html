@@ -2,11 +2,12 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Lista Categorias</title>
+    <title>Eventos de Reposição</title>
 </head>
 <style>
-    table {
+table {
   border-collapse: collapse;
+  width: 25%;
 }
 
 th, td {
@@ -14,27 +15,24 @@ th, td {
   text-align: left;
   border-bottom: 1px solid #DDD
 }
+
 </style>
 <body style="padding:20px">
 {% if cursor %}
-    <table border="2px">
+    <table  border="2px">
+        <h2>Unidades repostas por Categoria</h2>
+        <p>&nbsp;</p>
         <thead>
             <tr>
-                <th>Categorias</th>
-                <th>Remover</th>
-            </tr>
-            <tr>
-                <td><a href="inserir_categoria_simples">Inserir Categoria Simples</a></td>
-            </tr>
-            <tr>
-                <td><a href="inserir_super_categoria">Inserir Super Categoria</a></td>
+                <th><h3>Categorias</h3></th>
+                <th><h3>Unidades Repostas</h3></th>
             </tr>
         </thead>
         <tbody>
             {% for record in cursor %}
                 <tr>
                     <td>{{ record[0] }}</td>
-                    <td><a href="categorias/remover_categoria">Remover</a></td>
+                    <td>{{ record[1] }}</td>
                 </tr>
             {% endfor %}
         </tbody>

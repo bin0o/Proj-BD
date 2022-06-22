@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Inserir Retalhista</title>
+</head>
+<style>
+  table {
+    border-collapse: collapse;
+    width: 10%;
+  }
+  
+  th, td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #DDD
+  }
+  
+  </style>
+<body>
+  <h3>Inserir novo retalhista</h3>
+  <form action="update_retalhista" method="post">
+    <p>tin: <input type="text" name="tin"/></p>
+    <p>nome: <input type="text" name="nome"/></p>
+  <p>&nbsp;</p>
+  <h3>Inserir Categoria associada</h3>
+  <p>categoria: <input type="text" name="name_cat"/></p>
+  <h3>Inserir Número de Série associado</h3>
+  <p>num_serie: <input type="text" name="num_serie"/></p>
+  <h3>Inserir Fabricante associado</h3>
+  <p>fabricante: <input type="text" name="fab"/></p>
+  <p><input type="submit" value="Submit"/></p>
+  </form>
+  <p>&nbsp;</p>
+  <p>Selecione uma combinação das seguintes disponíveis:</p>
+  {% if cursor %}
+    <table  border="2px">
+      <thead>
+          <tr>
+              <th><h4>Categorias</h4></th>
+              <th><h4>Número de Série</h4></th>
+              <th><h4>Fabricante</h4></th>
+          </tr>
+      </thead>
+      <tbody>
+        {% for record in cursor %}
+            <tr>
+                <td>{{ record[0] }}</td>
+                <td>{{ record[1] }}</td>
+                <td>{{ record[2] }}</td>
+            </tr>
+        {% endfor %}
+      </tbody>
+  {% else %}
+    <p> Erro: não foi possível obter dados da base de dados!</p>
+  {% endif %}
+</body>
+</html>
