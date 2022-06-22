@@ -15,8 +15,7 @@ DROP TABLE IF EXISTS evento_reposicao CASCADE;
 
 DROP INDEX IF EXISTS tin_responsavel_por_idx;
 DROP INDEX IF EXISTS cat_responsavel_por_idx;
-DROP INDEX IF EXISTS cat_produto_idx;
-DROP INDEX IF EXISTS descr;
+DROP INDEX IF EXISTS produto_idx;
 
 
 ---------------------------------------------------
@@ -584,6 +583,5 @@ e apenas criamos na tabela produto pois é a única tabela presente na query
 que tem atributos não primários que usamos para fazer a seleção.
 */
 
-CREATE INDEX cat_produto_idx ON produto(cat);
-CREATE INDEX descr_produto_idx ON produto(descr);
+CREATE INDEX produto_idx ON produto(cat, descr);
 
