@@ -19,13 +19,14 @@ th, td {
 </style>
 <body style="padding:20px">
 {% if cursor %}
+    <h2>IVMs</h2>
+    <p>Selecione a IVM que pretende listar os seus eventos de reposição.</p>
     <table  border="2px">
-        <h2>Unidades repostas por Categoria</h2>
-        <p>&nbsp;</p>
         <thead>
             <tr>
-                <th><h3>Categorias</h3></th>
-                <th><h3>Unidades Repostas</h3></th>
+                <th><h3>Número de Série</h3></th>
+                <th><h3>Fabricante</h3></th>
+                <th><h3>Listar</h3></th>
             </tr>
         </thead>
         <tbody>
@@ -33,6 +34,8 @@ th, td {
                 <tr>
                     <td>{{ record[0] }}</td>
                     <td>{{ record[1] }}</td>
+                    <td><a href="listar_eventos?num_serie={{record[0]}}&fabricante={{record[1]}}">Listar</a></td>
+
                 </tr>
             {% endfor %}
         </tbody>
