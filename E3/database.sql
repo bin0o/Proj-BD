@@ -458,6 +458,19 @@ ON nome_cat=nome
 GROUP BY tin 
 HAVING (SELECT COUNT(*) FROM categoria_simples)=COUNT(nome_cat);
 
+--- 2.1.
+
+SELECT DISTINCT name_
+FROM retalhista 
+WHERE NOT EXISTS (
+SELECT nome
+FROM categoria_simples 
+EXCEPT
+SELECT nome_cat
+FROM (responsavel_por JOIN retalhista
+ON responsavel_por.tin = retalhista.tin) AS RR
+WHERE RR.name_=retalhista.name_);
+
 
 --- 3.
 
@@ -466,6 +479,13 @@ FROM evento_reposicao RIGHT JOIN produto
 ON produto.ean = evento_reposicao.ean 
 GROUP BY produto.ean 
 HAVING COUNT(evento_reposicao.ean) = 0;
+
+
+---3.1.
+
+SELECT ean 
+FROM produto 
+WHERE ean NOT IN (SELECT ean FROM evento_reposicao);
 
 --- 4.
 SELECT ean 
