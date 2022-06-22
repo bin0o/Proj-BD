@@ -7,9 +7,9 @@ import psycopg2.extras
 
 ## SGBD configs
 DB_HOST = "db.tecnico.ulisboa.pt"
-DB_USER = ""
+DB_USER = "ist199108"
 DB_DATABASE = DB_USER
-DB_PASSWORD = ""
+DB_PASSWORD = "Tochinha18"
 DB_CONNECTION_STRING = "host=%s dbname=%s user=%s password=%s" % (
     DB_HOST,
     DB_DATABASE,
@@ -192,7 +192,7 @@ def update_retalhista():
         num_serie = request.form["num_serie"]
         fab = request.form["fab"]
         query = "INSERT INTO retalhista VALUES(%s,%s)"
-        data = (tin,nome)
+        data = (tin, nome)
         cursor.execute(query, data)
         query = "INSERT INTO responsavel_por VALUES(%s,%s,%s,%s)"
         data = (name_cat,tin,num_serie,fab)
@@ -235,13 +235,13 @@ def remove_retalhista():
         dbConn.close()
 
 @app.route("/eventos")
-def lista_eventos():
+def eventos():
     dbConn = None
     cursor = None
     try:
         dbConn = psycopg2.connect(DB_CONNECTION_STRING)
         cursor = dbConn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        query = "SELECT nome,SUM(unidades_evento) FROM evento_reposicao NATURAL JOIN tem_categoria GROUP BY nome"
+        query = "SELECT * FROM ivm"
         cursor.execute(query)
         return render_template("eventos.html", cursor=cursor)
     except Exception as e:
@@ -250,4 +250,25 @@ def lista_eventos():
         cursor.close()
         dbConn.close() 
 
+@app.route("/listar_eventos")
+def listar_eventos():
+    dbConn = None
+    cursor = None
+    try:
+        dbConn = psycopg2.connect(DB_CONNECTION_STRING)
+        cursor = dbConn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        num_serie = request.args["num_serie"]
+        fabricante = request.args["fabricante"]
+        query = "SELECT nome, SUM(unidades_evento) FROM evento_reposicao NATURAL JOIN tem_categoria WHERE (num_serie = %s AND fabricante = %s) GROUP BY nome"
+        data = (num_serie, fabricante)
+        cursor.execute(query, data)
+        return render_template("listar_eventos.html", cursor=cursor, params=request.args)
+    except Exception as e:
+        return str(e)
+    finally:
+        cursor.close()
+        dbConn.close() 
+        
+
 CGIHandler().run(app)
+
