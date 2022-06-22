@@ -13,9 +13,9 @@ DROP TABLE IF EXISTS retalhista CASCADE;
 DROP TABLE IF EXISTS responsavel_por CASCADE;
 DROP TABLE IF EXISTS evento_reposicao CASCADE;
 
-DROP INDEX IF EXISTS responsavel_por_idx;
+DROP INDEX IF EXISTS tin_responsavel_por_idx;
+DROP INDEX IF EXISTS cat_responsavel_por_idx;
 DROP INDEX IF EXISTS produto_idx;
-
 
 
 ---------------------------------------------------
@@ -547,12 +547,17 @@ Unique  (cost=9.43..9.44 rows=1 width=178) (actual time=0.038..0.040 rows=0 loop
  Planning Time: 0.091 ms
  Execution Time: 0.055 ms
                     
-Criamos um índice Btree pois as interrogações na query requerer mais que uma comparação,
-e apenas criamos na tabela responsavel_por pois é a única tabela presente na query
+Criamos um índice de HASH para o atributo responsavel_por.nome_cat
+visto ser o melhor para seleção de igualdade de um valor específico,
+mas criamos um índice Btree para o atributo responsavel_por.tin, pois,
+apesar de ser usado numa igualdade, difere um pouco visto não sabermos
+a quantidade de igualdades que existe entre retalhista.tin e responsavel_por.tin.
+Apenas criamos índices na tabela responsavel_por pois é a única tabela presente na query
 que tem atributos não primários que usamos para fazer a seleção.
 */
 
-CREATE INDEX responsavel_por_idx ON responsavel_por(tin, nome_cat);
+CREATE INDEX tin_responsavel_por_idx ON responsavel_por(tin);
+CREATE INDEX cat_responsavel_por_idx ON responsavel_por USING HASH(nome_cat);
 
 --7.2
  /*
@@ -574,12 +579,12 @@ Unique  (cost=9.43..9.44 rows=1 width=178) (actual time=0.038..0.040 rows=0 loop
  Planning Time: 0.091 ms
  Execution Time: 0.055 ms
 
-Criamos apenas um índice de HASH visto ser o melhor para seleção de igualdade,
+
+Criamos um índice Btree composto pois as interrogações requerem
+mais que uma comparação e ambos usam igualdades não com valores extatos,
 e apenas criamos na tabela produto pois é a única tabela presente na query
-que tem um atributo não primário que necessitamos para fazer a seleção.
-Não vale a pena criar um índice para o atributo produto.descr pois não estamos a pedir
-um valor exato na query, mas sim uma expressão, através do 'LIKE'.
+que tem atributos não primários que usamos para fazer a seleção.
 */
 
-CREATE INDEX produto_idx ON produto USING HASH(cat);
+CREATE INDEX produto_idx ON produto(cat, descr);
 
