@@ -7,9 +7,9 @@ import psycopg2.extras
 
 ## SGBD configs
 DB_HOST = "db.tecnico.ulisboa.pt"
-DB_USER = "ist199108"
+DB_USER = ""
 DB_DATABASE = DB_USER
-DB_PASSWORD = "Tochinha18"
+DB_PASSWORD = ""
 DB_CONNECTION_STRING = "host=%s dbname=%s user=%s password=%s" % (
     DB_HOST,
     DB_DATABASE,
@@ -295,7 +295,7 @@ def listar_eventos():
         cursor = dbConn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         num_serie = request.args["num_serie"]
         fabricante = request.args["fabricante"]
-        query = "SELECT nome, SUM(unidades_evento) FROM evento_reposicao NATURAL JOIN tem_categoria WHERE (num_serie = %s AND fabricante = %s) GROUP BY nome"
+        query = "SELECT nome, SUM(unidades_evento) FROM evento_reposicao NATURAL JOIN prateleira WHERE (num_serie = %s AND fabricante = %s) GROUP BY nome"
         data = (num_serie, fabricante)
         cursor.execute(query, data)
         return render_template("listar_eventos.html", cursor=cursor, params=request.args)

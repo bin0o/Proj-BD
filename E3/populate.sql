@@ -126,91 +126,6 @@ CREATE TABLE evento_reposicao
 
 
 ---------------------------------------------------
--- CONSTRAINTS
----------------------------------------------------
--- Triggers
-
---1
-DROP FUNCTION IF EXISTS chk_categoria_proc();
-
-CREATE OR REPLACE FUNCTION chk_categoria_proc()
-RETURNS TRIGGER AS
-$$
-BEGIN
-    IF NEW.categoria = NEW.super_categoria THEN
-        Raise Exception 'Uma Categoria não pode estar contida em si própria';
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS chk_categoria_trigger ON tem_outra;
-
-CREATE TRIGGER chk_categoria_trigger
-BEFORE INSERT ON tem_outra
-FOR EACH ROW
-EXECUTE PROCEDURE chk_categoria_proc();
-
---2
-
-DROP FUNCTION IF EXISTS chk_unidades_reposicao_proc();
-
-CREATE OR REPLACE FUNCTION chk_unidades_reposicao_proc()
-RETURNS TRIGGER AS
-$$
-DECLARE unidades_planograma INT;
-BEGIN
-    SELECT unidades_plan INTO unidades_planograma
-    FROM planograma WHERE
-    ean = NEW.ean AND num_serie = NEW.num_serie AND fabricante = NEW.fabricante AND nro = NEW.nro;
-    IF NEW.unidades_evento > unidades_planograma THEN
-        RAISE EXCEPTION 'O número de unidades repostas num Evento de Reposição
-        não pode exceder o número de unidades especificado no Planograma';
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS chk_unidades_reposicao_trigger ON evento_reposicao;
-
-CREATE TRIGGER chk_unidades_reposicao_trigger
-BEFORE INSERT ON evento_reposicao
-FOR EACH ROW
-EXECUTE PROCEDURE chk_unidades_reposicao_proc();
-
---3
-
-DROP FUNCTION IF EXISTS chk_produto_reposto_proc();
-
-CREATE OR REPLACE FUNCTION chk_produto_reposto_proc()
-RETURNS TRIGGER AS
-$$
-DECLARE nome_prateleira VARCHAR(80);
-BEGIN
-    
-    SELECT nome 
-    INTO nome_prateleira
-    FROM prateleira NATURAL JOIN planograma
-    WHERE NEW.ean = ean AND NEW.nro = nro AND NEW.num_serie = num_serie;
-    
-    IF nome_prateleira NOT IN (SELECT nome
-    FROM tem_categoria
-    WHERE NEW.ean = ean) THEN
-        RAISE EXCEPTION 'Um Produto só pode ser reposto numa Prateleira
-        que apresente (pelo menos) uma das Categorias desse produto';
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS chk_produto_reposto_trigger ON evento_reposicao;
-
-CREATE TRIGGER chk_produto_reposto_trigger
-BEFORE INSERT ON evento_reposicao
-FOR EACH ROW
-EXECUTE PROCEDURE chk_produto_reposto_proc();
-
----------------------------------------------------
 -- POPULATE RELATIONS
 ---------------------------------------------------
 -- Categoria
@@ -633,6 +548,7 @@ INSERT INTO responsavel_por VALUES
                                     ('Sopas','496320710','4','Atlante'),
                                     ('Frutas','208913249','5','Cristallo'),
                                     ('Pão','496320710','6','Atlante'),
+                                    ('Bebidas Energéticas', '208913249', '7', 'Cristallo'),
                                     ('Barras Energéticas','968720710','8','IVM1'),
                                     ('Barras de Frutas','968720710','9','IVM2'),
                                     ('Refrigerantes','968720710','10','IVM3'),
@@ -643,6 +559,7 @@ INSERT INTO responsavel_por VALUES
                                     ('Legumes','968720710','15','IVM8'),
                                     ('Sopas','968720710','16','IVM9'),
                                     ('Barras','968720710','17','IVM10'),
+                                    ('Frutas', '208913249', '18', 'Bosch'),
                                     ('Pão Caseiro Sementes','968720710','19','IVM11'),
                                     ('Pão Caseiro Simples','968720710','20','IVM12'),
                                     ('Pão de Forma Sementes','968720710','21','IVM13'),
@@ -661,6 +578,7 @@ INSERT INTO evento_reposicao VALUES ('10','1', '1','Bosch','18/02/2022','10','10
                                     ('380', '1', '6', 'Atlante', '1/02/2022', '20', '496320710'),
                                     ('440', '1', '6', 'Atlante', '1/02/2022', '36', '496320710'),
                                     ('410', '1', '6', 'Atlante', '1/02/2022', '13', '496320710'),
+                                    ('170','5','7', 'Cristallo', '20/06/2022', '35', '208913249'),
                                     ('30', '1', '8', 'IVM1', '25/07/2005', '10', '968720710'),
                                     ('80', '1', '9', 'IVM2', '25/08/2005', '30', '968720710'),
                                     ('120', '1', '10', 'IVM3', '25/09/2005', '15', '968720710'),
@@ -671,173 +589,8 @@ INSERT INTO evento_reposicao VALUES ('10','1', '1','Bosch','18/02/2022','10','10
                                     ('300', '1', '15', 'IVM8', '25/07/2005', '10', '968720710'),
                                     ('340', '1', '16', 'IVM9', '25/07/2005', '10', '968720710'),
                                     ('20', '1', '17', 'IVM10', '25/07/2005', '10', '968720710'),
+                                    ('230', '1', '18', 'Bosch', '25/07/2005', '10', '968720710'),
                                     ('350', '1', '19', 'IVM11', '25/07/2005', '10', '968720710'),
                                     ('400', '1', '20', 'IVM12', '25/07/2005', '10', '968720710'),
                                     ('440', '1', '21', 'IVM13', '25/07/2005', '10', '968720710'),
                                     ('470', '1', '22', 'IVM14', '25/07/2005', '10', '968720710');
-
-                    
-                            
---------------------------------------------------
--- SQL
---------------------------------------------------
-/*
---- 1.
-
-SELECT name_ 
-FROM retalhista NATURAL JOIN responsavel_por 
-GROUP BY tin
-HAVING COUNT(nome_cat) >= ALL(
-SELECT COUNT(nome_cat) 
-FROM retalhista NATURAL JOIN responsavel_por
-GROUP BY tin);
-
---- 2.
-
-SELECT name_ 
-FROM retalhista NATURAL JOIN responsavel_por RIGHT JOIN categoria_simples 
-ON nome_cat=nome 
-GROUP BY tin 
-HAVING (SELECT COUNT(*) FROM categoria_simples)=COUNT(nome_cat);
-
---- 2.1.
-
-SELECT DISTINCT name_
-FROM retalhista 
-WHERE NOT EXISTS (
-SELECT nome
-FROM categoria_simples 
-EXCEPT
-SELECT nome_cat
-FROM (responsavel_por JOIN retalhista
-ON responsavel_por.tin = retalhista.tin) AS RR
-WHERE RR.name_=retalhista.name_);
-
----3.
-
-SELECT ean 
-FROM produto 
-WHERE ean NOT IN (SELECT ean FROM evento_reposicao);
-
---- 4.
-
-SELECT ean 
-FROM (SELECT DISTINCT ean, tin FROM evento_reposicao) AS count_ean
-GROUP BY ean 
-HAVING COUNT(ean) = 1;
-*/
---------------------------------------------------
-CREATE OR REPLACE VIEW vendas AS
-SELECT ean,
-    prat.nome AS cat, 
-    EXTRACT(YEAR FROM instante) AS ano, 
-    EXTRACT(QUARTER FROM instante) AS trimestre, 
-    EXTRACT(MONTH FROM instante) AS mes,
-    EXTRACT(DAY FROM instante) AS dia_mes, 
-    CASE EXTRACT(DOW FROM instante)
-        WHEN 0 THEN 'Domingo'
-        WHEN 1 THEN 'Segunda'
-        WHEN 2 THEN 'Terça'
-        WHEN 3 THEN 'Quarta'
-        WHEN 4 THEN 'Quinta'
-        WHEN 5 THEN 'Sexta'
-        WHEN 6 THEN 'Sábado'
-    END AS dia_semana, 
-    distrito, 
-    concelho, 
-    unidades_evento AS unidades 
-    FROM prateleira AS prat NATURAL JOIN evento_reposicao
-        NATURAL JOIN instalada_em  
-        JOIN ponto_de_retalho ON local_ = ponto_de_retalho.nome;
-
-
----------------------------------------------
---OLAP
----------------------------------------------
-/*
--- 1.
-SELECT dia_semana, concelho, SUM(unidades) 
-FROM vendas 
-WHERE (ano > 2022 OR (ano = 2022  AND ( mes > 5 OR  ( mes=5 AND (dia_mes >= 21))))) 
-AND (ano < 2023 OR (ano = 2023 AND (mes < 2 OR (mes = 2 AND (dia_mes <= 18))))) 
-GROUP BY CUBE(dia_semana,concelho) ORDER BY(dia_semana,concelho);
-
--- 2.
-SELECT concelho, cat, dia_semana, SUM(unidades)
-FROM vendas
-WHERE distrito = 'Lisboa'
-GROUP BY CUBE(concelho, cat, dia_semana)
-ORDER BY(concelho, cat, dia_semana);
-
--- 2.1.
-SELECT concelho, cat, dia_semana, SUM(unidades)
-FROM vendas
-WHERE distrito = 'Lisboa'
-GROUP BY GROUPING SETS((concelho), (cat), (dia_semana), ())
-ORDER BY(concelho, cat, dia_semana);
-*/
-
----------------------------------------------
---Índices
----------------------------------------------
---7.1
-
-/*
-EXPLAIN SELECT DISTINCT R.name_
- FROM retalhista R, responsavel_por P
- WHERE R.tin = P.tin and P.nome_cat = 'Frutos';
-
-Unique  (cost=9.43..9.44 rows=1 width=178) (actual time=0.038..0.040 rows=0 loops=1)
-   ->  Sort  (cost=9.43..9.43 rows=1 width=178) (actual time=0.037..0.039 rows=0 loops=1)
-         Sort Key: r.name_
-         Sort Method: quicksort  Memory: 25kB
-         ->  Nested Loop  (cost=0.15..9.42 rows=1 width=178) (actual time=0.007..0.008 rows=0 loops=1)
-               ->  Seq Scan on responsavel_por p  (cost=0.00..1.21 rows=1 width=4) (actual time=0.006..0.007 rows=0 loops=1)
-                     Filter: ((nome_cat)::text = 'Frutas'::text)
-                     Rows Removed by Filter: 17
-               ->  Index Scan using pk_retalhista on retalhista r  (cost=0.15..8.17 rows=1 width=182) (never executed)
-                     Index Cond: (tin = p.tin)
- Planning Time: 0.091 ms
- Execution Time: 0.055 ms
-                    
-Criamos um índice de HASH para o atributo responsavel_por.nome_cat
-visto ser o melhor para seleção de igualdade de um valor específico,
-mas criamos um índice Btree para o atributo responsavel_por.tin, pois,
-apesar de ser usado numa igualdade, difere um pouco visto não sabermos
-a quantidade de igualdades que existe entre retalhista.tin e responsavel_por.tin.
-Apenas criamos índices na tabela responsavel_por pois é a única tabela presente na query
-que tem atributos não primários que usamos para fazer a seleção.
-*/
-
-CREATE INDEX tin_responsavel_por_idx ON responsavel_por(tin);
-CREATE INDEX cat_responsavel_por_idx ON responsavel_por USING HASH(nome_cat);
-
---7.2
- /*
-EXPLAIN SELECT T.nome, count(T.ean)
- FROM produto P, tem_categoria T
- WHERE p.cat = T.nome and P.descr like 'A%'
- GROUP BY T.nome;
-
-Unique  (cost=9.43..9.44 rows=1 width=178) (actual time=0.038..0.040 rows=0 loops=1)
-   ->  Sort  (cost=9.43..9.43 rows=1 width=178) (actual time=0.037..0.039 rows=0 loops=1)
-         Sort Key: r.name_
-         Sort Method: quicksort  Memory: 25kB
-         ->  Nested Loop  (cost=0.15..9.42 rows=1 width=178) (actual time=0.007..0.008 rows=0 loops=1)
-               ->  Seq Scan on responsavel_por p  (cost=0.00..1.21 rows=1 width=4) (actual time=0.006..0.007 rows=0 loops=1)
-                     Filter: ((nome_cat)::text = 'Frutos'::text)
-                     Rows Removed by Filter: 17
-               ->  Index Scan using pk_retalhista on retalhista r  (cost=0.15..8.17 rows=1 width=182) (never executed)
-                     Index Cond: (tin = p.tin)
- Planning Time: 0.091 ms
- Execution Time: 0.055 ms
-
-
-Criamos um índice Btree composto pois as interrogações requerem
-mais que uma comparação e ambos usam igualdades não com valores extatos,
-e apenas criamos na tabela produto pois é a única tabela presente na query
-que tem atributos não primários que usamos para fazer a seleção.
-*/
-
-CREATE INDEX produto_idx ON produto(cat, descr);
-
