@@ -37,8 +37,8 @@ CREATE TABLE super_categoria
      CONSTRAINT fk_super_categoria_categoria FOREIGN KEY(nome) REFERENCES categoria(nome) ON DELETE CASCADE);
 
 CREATE TABLE tem_outra
-    (super_categoria CHAR(20) NOT NULL,
-     categoria CHAR(20) NOT NULL,
+    (super_categoria CHAR(80) NOT NULL,
+     categoria CHAR(80) NOT NULL,
      CONSTRAINT pk_tem_outra PRIMARY KEY(categoria),
      CONSTRAINT fk_tem_outra_categoria FOREIGN KEY(categoria) REFERENCES categoria(nome) ON DELETE CASCADE,
      CONSTRAINT fk_tem_outra_super_categoria FOREIGN KEY(super_categoria) REFERENCES super_categoria(nome) ON DELETE CASCADE);
@@ -186,20 +186,17 @@ DROP FUNCTION IF EXISTS chk_produto_reposto_proc();
 CREATE OR REPLACE FUNCTION chk_produto_reposto_proc()
 RETURNS TRIGGER AS
 $$
-DECLARE nome_categoria VARCHAR(80);
 DECLARE nome_prateleira VARCHAR(80);
 BEGIN
-    SELECT nome
-    INTO nome_categoria
-    FROM tem_categoria
-    WHERE NEW.ean = ean;
-
+    
     SELECT nome 
     INTO nome_prateleira
     FROM prateleira NATURAL JOIN planograma
     WHERE NEW.ean = ean AND NEW.nro=nro AND NEW.num_serie=num_serie;
     
-    IF nome_categoria != nome_prateleira THEN
+    IF nome_prateleira NOT IN (SELECT nome
+    FROM tem_categoria
+    WHERE NEW.ean = ean) THEN
         RAISE EXCEPTION 'Um Produto só pode ser reposto numa Prateleira
         que apresente (pelo menos) uma das Categorias desse produto';
     END IF;
@@ -296,11 +293,16 @@ INSERT INTO produto VALUES
                         ('130','Legumes','Espinafre'),
                         ('140','Legumes','Cenoura'),
                         ('150','Sopas','Sopa Miso'),
-                        ('160','Sopas','Sopa de Cenoura');
+                        ('160','Sopas','Sopa de Cenoura'),
+                        ('170','Pao Caseiro Sementes','Pao Caseiro Sem LIDL'),
+                        ('180','Pao Caseiro Simples','Pao Caseiro Sim LIDL'),
+                        ('190','Pao de Forma Semente','Pao de Forma Sem LIDL'),
+                        ('200','Pao de Forma Simples','Pao de Forma Sim LIDL');
 
 -- Tem Categoria
 INSERT INTO tem_categoria VALUES
                                 ('10','Barras Energéticas'),
+                                ('10','Barras'),
                                 ('20','Barras'),
                                 ('30','Barras de Frutas'),
                                 ('40','Refrigerantes'),
@@ -315,7 +317,11 @@ INSERT INTO tem_categoria VALUES
                                 ('130','Legumes'),
                                 ('140','Legumes'),
                                 ('150','Sopas'),
-                                ('160','Sopas');
+                                ('160','Sopas'),
+                                ('170','Pao Caseiro Sementes'),
+                                ('180','Pao Caseiro Simples'),
+                                ('190','Pao de Forma Semente'),
+                                ('200','Pao de Forma Simples');
 
 -- IVM
 INSERT INTO IVM VALUES 
@@ -337,7 +343,11 @@ INSERT INTO IVM VALUES
                     ('15', 'IVM8'),
                     ('16', 'IVM9'),
                     ('17', 'IVM10'),
-                    ('18', 'Bosch');
+                    ('18', 'Bosch'),
+                    ('19','IVM11'),
+                    ('20','IVM12'),
+                    ('21','IVM13'),
+                    ('22','IVM14');
 
 -- Ponto de Retalho
 INSERT INTO ponto_de_retalho VALUES 
@@ -366,7 +376,11 @@ INSERT INTO instalada_em VALUES
                                 ('15', 'IVM8','Repsol-Lisboa' ),
                                 ('16', 'IVM9','Repsol-Lisboa' ),
                                 ('17','IVM10','Repsol-Lisboa'),
-                                ('18','Bosch','Repsol-Lisboa');
+                                ('18','Bosch','Repsol-Lisboa'),
+                                ('19','IVM11','Repsol-Lisboa'),
+                                ('20','IVM12','Repsol-Lisboa'),
+                                ('21','IVM13','Repsol-Lisboa'),
+                                ('22','IVM14','Repsol-Lisboa');
 
 -- Prateleira
 INSERT INTO prateleira VALUES 
@@ -389,7 +403,11 @@ INSERT INTO prateleira VALUES
                                 ('1','15','IVM8','15','Legumes'),
                                 ('1','16','IVM9','15','Sopas'),
                                 ('1','17','IVM10','15','Barras'),
-                                ('1','18','Bosch','15','Fruta');
+                                ('1','18','Bosch','15','Fruta'),
+                                ('1','19','IVM11','15','Pao Caseiro Sementes'),
+                                ('1','20','IVM12','15','Pao Caseiro Simples'),
+                                ('1','21','IVM13','15','Pao de Forma Semente'),
+                                ('1','22','IVM14','15','Pao de Forma Simples');
 
 -- Planograma
 INSERT INTO planograma VALUES 
@@ -411,7 +429,11 @@ INSERT INTO planograma VALUES
                                 ('140','1','15','IVM8','6','48','3'),
                                 ('160','1','16','IVM9','6','48','3'),
                                 ('20','1','17','IVM10','6','48','3'),
-                                ('110','1','18','Bosch','6','48','3');
+                                ('110','1','18','Bosch','6','48','3'),
+                                ('170','1','19','IVM11','6','48','3'),
+                                ('180','1','20','IVM12','6','48','3'),
+                                ('190','1','21','IVM13','6','48','3'),
+                                ('200','1','22','IVM14','6','48','3');
 
 -- Retalhista
 INSERT INTO retalhista VALUES
@@ -441,7 +463,11 @@ INSERT INTO responsavel_por VALUES
                                     ('Fruta','968720710','14','IVM7'),
                                     ('Legumes','968720710','15','IVM8'),
                                     ('Sopas','968720710','16','IVM9'),
-                                    ('Barras','968720710','17','IVM10');
+                                    ('Barras','968720710','17','IVM10'),
+                                    ('Pao Caseiro Sementes','968720710','19','IVM11'),
+                                    ('Pao Caseiro Simples','968720710','20','IVM12'),
+                                    ('Pao de Forma Semente','968720710','21','IVM13'),
+                                    ('Pao de Forma Simples','968720710','22','IVM14');
 
 -- Evento Reposição
 INSERT INTO evento_reposicao VALUES ('50','1', '1','Bosch','18/02/2022','10','102415639'),
@@ -449,7 +475,8 @@ INSERT INTO evento_reposicao VALUES ('50','1', '1','Bosch','18/02/2022','10','10
                                     ('50','2','4','Atlante', '26/09/2022','20','496320710'),
                                     ('50','1', '1','Bosch','18/02/2023','25','102415639'),
                                     ('120','3','5','Cristallo','22/05/2022','30','208913249'),
-                                    ('80','5','7', 'Cristallo', '20/06/2022', '35', '496326229');
+                                    ('80','5','7', 'Cristallo', '20/06/2022', '35', '496326229'),
+                                    ('10','1','8','IVM1','25/07/2005','10','968720710');
 
 
 
@@ -492,16 +519,7 @@ ON responsavel_por.tin = retalhista.tin) AS RR
 WHERE RR.name_=retalhista.name_);
 
 
---- 3.
-
-SELECT produto.ean 
-FROM evento_reposicao RIGHT JOIN produto 
-ON produto.ean = evento_reposicao.ean 
-GROUP BY produto.ean 
-HAVING COUNT(evento_reposicao.ean) = 0;
-
-
----3.1.
+---3.
 
 SELECT ean 
 FROM produto 
@@ -516,7 +534,7 @@ HAVING COUNT(ean) = 1;
 --------------------------------------------------
 CREATE OR REPLACE VIEW vendas AS
 SELECT ean,
-    cat.nome AS cat, 
+    prat.nome AS cat, 
     EXTRACT(YEAR FROM instante) AS ano, 
     EXTRACT(QUARTER FROM instante) AS trimestre, 
     EXTRACT(MONTH FROM instante) AS mes,
@@ -533,7 +551,7 @@ SELECT ean,
     distrito, 
     concelho, 
     unidades_evento AS unidades 
-    FROM tem_categoria AS cat NATURAL JOIN evento_reposicao
+    FROM prateleira AS prat NATURAL JOIN evento_reposicao
         NATURAL JOIN instalada_em  
         JOIN ponto_de_retalho ON local_ = ponto_de_retalho.nome;
 
