@@ -146,6 +146,42 @@ def remove_categoria():
         dbConn.close()
         
         
+@app.route("/listar_subcat")
+def listar_subcat():
+    dbConn = None
+    cursor = None
+    try:
+        dbConn = psycopg2.connect(DB_CONNECTION_STRING)
+        cursor = dbConn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        nome=request.args["nome"]
+        query = "WITH RECURSIVE sub_categorias AS (SELECT categoria FROM tem_outra WHERE super_categoria=%s UNION (SELECT c.categoria FROM tem_outra c INNER JOIN sub_categorias s ON s.categoria = c.super_categoria)) SELECT * FROM sub_categorias"
+        data=(nome,)
+        cursor.execute(query,data)
+        return render_template("listar_sub_cats.html", cursor=cursor, params=request.args)
+    except Exception as e:
+        return str(e)
+    finally:
+        cursor.close()
+        dbConn.close()
+        
+@app.route("/listar_supercat")
+def listar_supercat():
+    dbConn = None
+    cursor = None
+    try:
+        dbConn = psycopg2.connect(DB_CONNECTION_STRING)
+        cursor = dbConn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        query = "SELECT * FROM super_categoria"
+        cursor.execute(query)
+        return render_template("listar_super_cats.html", cursor=cursor)
+    except Exception as e:
+        return str(e)
+    finally:
+        cursor.close()
+        dbConn.close()    
+
+        
+        
 @app.route("/retalhistas")
 def lista_rets():
     dbConn = None

@@ -231,7 +231,14 @@ INSERT INTO categoria VALUES
                             ('Sumos de Fruta'),
                             ('Fruta'),
                             ('Legumes'),
-                            ('Sopas');
+                            ('Sopas'),
+                            ('Pao'),
+                            ('Pao Caseiro'),
+                            ('Pao Caseiro Sementes'),
+                            ('Pao Caseiro Simples'),
+                            ('Pao de Forma'),
+                            ('Pao de Forma Semente'),
+                            ('Pao de Forma Simples');
 
 -- Categoria Simples
 INSERT INTO categoria_simples VALUES 
@@ -243,12 +250,19 @@ INSERT INTO categoria_simples VALUES
                                     ('Sumos de Fruta'),
                                     ('Fruta'),
                                     ('Legumes'),
-                                    ('Sopas');
+                                    ('Sopas'),
+                                    ('Pao Caseiro Sementes'),
+                                    ('Pao Caseiro Simples'),
+                                    ('Pao de Forma Semente'),
+                                    ('Pao de Forma Simples');
 
 -- Super Categoria
 INSERT INTO super_categoria VALUES 
                                     ('Barras'),
-                                    ('Bebidas');
+                                    ('Bebidas'),
+                                    ('Pao'),
+                                    ('Pao Caseiro'),
+                                    ('Pao de Forma');
 
 -- Tem Outra
 INSERT INTO tem_outra VALUES 
@@ -257,7 +271,13 @@ INSERT INTO tem_outra VALUES
                             ('Bebidas','Refrigerantes'),
                             ('Bebidas', 'Bebidas Alcoólicas'),
                             ('Bebidas', 'Bebidas Energéticas'),
-                            ('Bebidas', 'Sumos de Fruta');
+                            ('Bebidas', 'Sumos de Fruta'),
+                            ('Pao', 'Pao Caseiro'),
+                            ('Pao', 'Pao de Forma'),
+                            ('Pao Caseiro', 'Pao Caseiro Sementes'),
+                            ('Pao Caseiro', 'Pao Caseiro Simples'),
+                            ('Pao de Forma', 'Pao de Forma Semente'),
+                            ('Pao de Forma', 'Pao de Forma Simples');
 
 -- Produto
 INSERT INTO produto VALUES 
@@ -410,7 +430,7 @@ INSERT INTO responsavel_por VALUES
                                     ('Fruta','208913249','5','Cristallo'),
                                     ('Refrigerantes','496320710','4','Atlante'),
                                     ('Refrigerantes','496320710','6','Atlante'),
-                                    ('Bebidas Energéticas','496326229','7','Cristallo'),
+                                    
 
                                     ('Barras Energéticas','968720710','8','IVM1'),
                                     ('Barras de Frutas','968720710','9','IVM2'),

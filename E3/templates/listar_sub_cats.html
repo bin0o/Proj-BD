@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Lista de Sub Categorias: {{params.get("nome")}}</title>
+</head>
+<style>
+table {
+  border-collapse: collapse;
+  width: 25%;
+}
+
+th, td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #DDD
+}
+
+</style>
+<body style="padding:20px">
+    <h2>As Sub Categorias da Super Categoria {{params.get("nome")}}:</h2>
+{% if cursor %}
+    <table  border="2px">
+        <thead>
+            <tr>
+                <th><h4>Sub-Categoria</h3></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in cursor %}
+                <tr>
+                    <td>{{ record[0] }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p> Erro: não foi possível obter dados da base de dados!</p>
+{% endif %}
+</body>
+</html>
